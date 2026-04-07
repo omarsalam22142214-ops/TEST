@@ -237,12 +237,11 @@
         
         
         <div class="tabs-container" id="mainTabs">
-            <button id="btn_new_1775318967644" class="tab-btn" data-link="https://livetv.aflam4you.net/zremb472.php?vid=68&amp;aflam_s=1&amp;aflam_w=360&amp;aflam_h=250&amp;aflam_k=11623324" onclick="playStream(this)">BEIN 1</button><button id="btn1" class="tab-btn" data-link="https://15.wwwkoora.com/albaplayer/bein-sports-hd-1/" onclick="playStream(this)">قناة 1 بس</button>
-            
-            <button class="auto-fetch-btn" id="loadJsonBtn" onclick="fetchMatchesFromJson()" style="background-color: #2980b9;">
-                🔄 جلب قنوات وماتشات اليوم (من سيرفري)
-            </button>
-            
+            <button id="btn_new_1775318967644" class="tab-btn" data-link="https://livetv.aflam4you.net/zremb472.php?vid=68&amp;aflam_s=1&amp;aflam_w=360&amp;aflam_h=250&amp;aflam_k=11623324" onclick="playStream(this)">BEIN 1</button><button id="btn1" class="tab-btn" data-link="https://15.wwwkoora.com/albaplayer/bein-sports-hd-1/" onclick="playStream(this)">قناة 1 بس</button><button class="auto-fetch-btn" id="autoFetchBtn" onclick="playRandomSportsChannel()">
+                ⚽ اكتشاف قناة رياضية من النت
+            </button><button class="auto-fetch-btn" id="loadJsonBtn" onclick="fetchMatchesFromJson()" style="background-color: #2980b9;">
+    🔄 جلب قنوات وماتشات اليوم (من سيرفري)
+</button>
             <button id="btn2" class="tab-btn" data-link="https://p4.panda-live.live/albaplayer/bein-1/" onclick="playStream(this)">1</button>
             <button id="btn3" class="tab-btn" data-link="https://tv12.koora-plus.top/chtv/ch1.php" onclick="playStream(this)">1</button>
             <button id="btn4" class="tab-btn hd" data-link="https://12.sportsurges.online/albaplayer/bein-1/?serv=1" onclick="playStream(this)">1</button>
@@ -512,63 +511,148 @@
             videoWrapper.classList.toggle('rotated');
         }
 
-        // دالة سحب الماتشات والقنوات من ملف matches.json الخاص بيك
-        async function fetchMatchesFromJson() {
-            const btn = document.getElementById('loadJsonBtn');
+        // دالة اكتشاف وتشغيل قناة رياضية عشوائية
+        function playRandomSportsChannel() {
+            const sportsChannels = [
+                "https://live.aflam4you.net/zremb472.php?vid=5407&aflam_s=1&aflam_w=360&aflam_h=250&aflam_k=11623324",
+                "https://tv19.koora-plus.top/chtv/ch1.php",
+                "https://tv19.koora-plus.top/chtv/ch2.php",
+                "https://tv19.koora-plus.top/chtv/ch3.php",
+                "https://tv19.koora-plus.top/chtv/ch4.php"
+            ];
+
+            const btn = document.getElementById('autoFetchBtn');
             const originalText = btn.innerHTML;
-            btn.innerHTML = "⏳ جاري تحميل القنوات...";
+            btn.innerHTML = "⏳ جاري البحث عن قناة...";
             btn.disabled = true;
 
-            try {
-                // حطينا Date().getTime() عشان نمنع الكاش، والمتصفح دايماً يجيب أحدث تعديل إنت عملته في الملف
-                let response = await fetch('matches.json?t=' + new Date().getTime());
+            setTimeout(() => {
+                const randomIndex = Math.floor(Math.random() * sportsChannels.length);
+                const randomUrl = sportsChannels[randomIndex];
 
-                if (!response.ok) {
-                    throw new Error('ملف matches.json مش موجود أو فيه مشكلة.');
-                }
+                document.getElementById('videoPlayer').src = randomUrl;
 
-                let matchesData = await response.json();
+                // إظهار زراير التحكم
+                document.getElementById('closeVid').style.display = 'inline-block';
+                document.getElementById('externalVid').style.display = 'inline-block';
+                document.getElementById('copyLinkBtn').style.display = 'inline-block';
 
-                if (matchesData.length === 0) {
-                    alert("ملف القنوات فاضي حالياً، ضيف فيه لينكات الأول من GitHub!");
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    return;
-                }
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
-                let addedCount = 0;
-
-                // مسح القنوات القديمة اللي اتسحبت قبل كده (عشان لو حدثت الملف وماتتكررش)
-                document.querySelectorAll('.json-added-btn').forEach(b => b.remove());
-
-                // إنشاء الزراير للقنوات والماتشات الجديدة
-                matchesData.forEach((match, index) => {
-                    let newId = "btn_json_" + new Date().getTime() + index;
-                    let newBtn = document.createElement("button");
-                    newBtn.id = newId;
-                    // ضفنا كلاس json-added-btn عشان نقدر نميزهم ونمسحهم وقت التحديث
-                    newBtn.className = "tab-btn json-added-btn"; 
-                    newBtn.setAttribute("data-link", match.url);
-                    newBtn.innerText = match.name; 
-                    newBtn.setAttribute("onclick", "playStream(this)");
-
-                    document.getElementById("mainTabs").appendChild(newBtn);
-                    addedCount++;
-                });
-
-                alert(`تم تحميل ${addedCount} قناة/ماتش من ملفك بنجاح! ✅`);
-                populateSelectMenu();
-
-            } catch (error) {
-                console.error("Error loading JSON:", error);
-                alert("حصلت مشكلة! اتأكد إنك عملت ملف matches.json صح ورفعته جنب الـ index.html");
-            } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-            }
+                
+            }, 500); 
+        }
+// دالة اكتشاف وتشغيل قناة رياضية عشوائية وإضافتها للشريط
+function playRandomSportsChannel() {
+    // 1. القائمة بقت بتحتوي على "اسم القناة" و "اللينك" مع بعض
+    const sportsChannels = [
+        { name: "Aflam4You Sport", url: "https://live.aflam4you.net/zremb472.php?vid=5407&aflam_s=1&aflam_w=360&aflam_h=250&aflam_k=11623324" },
+        { name: "Koora Plus 1", url: "https://tv19.koora-plus.top/chtv/ch1.php" },
+        { name: "Koora Plus 2", url: "https://tv19.koora-plus.top/chtv/ch2.php" },
+        { name: "Koora Plus 3", url: "https://tv19.koora-plus.top/chtv/ch3.php" },
+        { name: "Koora Plus 4", url: "https://tv19.koora-plus.top/chtv/ch4.php" }
+        // تقدر تزود هنا أي قنوات تانية بنفس الشكل ده
+    ];
+
+    const btn = document.getElementById('autoFetchBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "⏳ جاري البحث عن قناة...";
+    btn.disabled = true;
+
+    setTimeout(() => {
+        // نختار قناة عشوائية (اسم ولينك)
+        const randomIndex = Math.floor(Math.random() * sportsChannels.length);
+        const randomChannel = sportsChannels[randomIndex];
+
+        // نعمل زرار جديد للقناة دي في الشريط أوتوماتيك
+        let newId = "btn_auto_" + new Date().getTime();
+        let newBtn = document.createElement("button");
+        newBtn.id = newId;
+        newBtn.className = "tab-btn";
+        newBtn.setAttribute("data-link", randomChannel.url);
+        
+        // حطينا إيموجي ⭐ عشان تميز إن القناة دي جاتلك من الاكتشاف
+        newBtn.innerText = "⭐ " + randomChannel.name; 
+        newBtn.setAttribute("onclick", "playStream(this)");
+
+        // نضيف الزرار في شريط القنوات
+        document.getElementById("mainTabs").appendChild(newBtn);
+
+        // نحدث قائمة التعديل عشان الزرار الجديد يظهر فيها لو حبيت تعدله أو تحذفه بعدين
+        populateSelectMenu();
+        loadButtonData();
+        
+        // نشغل القناة عن طريق محاكاة الضغط على الزرار الجديد اللي لسه ضايفينه
+        playStream(newBtn);
+        
+        // نخلي الشريط يتحرك أوتوماتيك للزرار الجديد عشان يظهر قدامك
+        newBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+
+        // نرجع زرار البحث لشكله الأصلي
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+    }, 500); 
+}
+    
+// دالة سحب الماتشات والقنوات من ملف matches.json الخاص بيك
+async function fetchMatchesFromJson() {
+    const btn = document.getElementById('loadJsonBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "⏳ جاري تحميل القنوات...";
+    btn.disabled = true;
+
+    try {
+        // حطينا Date().getTime() عشان نمنع الكاش، والمتصفح دايماً يجيب أحدث تعديل إنت عملته في الملف
+        let response = await fetch('matches.json?t=' + new Date().getTime());
+        
+        if (!response.ok) {
+            throw new Error('ملف matches.json مش موجود أو فيه مشكلة.');
         }
 
-    </script>
+        let matchesData = await response.json();
+
+        if (matchesData.length === 0) {
+            alert("ملف القنوات فاضي حالياً، ضيف فيه لينكات الأول من GitHub!");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            return;
+        }
+
+        let addedCount = 0;
+
+        // مسح القنوات القديمة اللي اتسحبت قبل كده (عشان لو حدثت الملف وماتتكررش)
+        document.querySelectorAll('.json-added-btn').forEach(b => b.remove());
+
+        // إنشاء الزراير للقنوات والماتشات الجديدة
+        matchesData.forEach((match, index) => {
+            let newId = "btn_json_" + new Date().getTime() + index;
+            let newBtn = document.createElement("button");
+            newBtn.id = newId;
+            // ضفنا كلاس json-added-btn عشان نقدر نميزهم ونمسحهم وقت التحديث
+            newBtn.className = "tab-btn json-added-btn"; 
+            newBtn.setAttribute("data-link", match.url);
+            newBtn.innerText = match.name; 
+            newBtn.setAttribute("onclick", "playStream(this)");
+
+            document.getElementById("mainTabs").appendChild(newBtn);
+            addedCount++;
+        });
+
+        alert(`تم تحميل ${addedCount} قناة/ماتش من ملفك بنجاح! ✅`);
+        populateSelectMenu();
+
+    } catch (error) {
+        console.error("Error loading JSON:", error);
+        alert("حصلت مشكلة! اتأكد إنك عملت ملف matches.json صح ورفعته جنب الـ index.html");
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+</script>
 
 
 </body></html>
