@@ -1,0 +1,37 @@
+name: Auto Update Matches
+
+# المنبه هيشتغل إمتى؟
+on:
+  schedule:
+    - cron: '0 */3 * * *' # هيشتغل كل 3 ساعات أوتوماتيك
+  workflow_dispatch: # الزرار ده بيسمحلك تشغله يدوي في أي وقت من زرار Run workflow
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install cloudscraper beautifulsoup4
+
+      - name: Run Python Scraper
+        run: python scraper.py
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          git add matches.json
+          # لو في تغييرات في الملف، هيعمل كوميت ويرفعها، لو مفيش هيعدي الخطوة دي
+          git diff --quiet && git diff --staged --quiet || git commit -m "🔄 تحديث تلقائي للماتشات"
+          git push
